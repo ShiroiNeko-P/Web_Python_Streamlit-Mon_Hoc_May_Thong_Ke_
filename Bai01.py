@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 
 file = st.file_uploader("Up file")
 
@@ -29,6 +28,6 @@ if not (file is None):
 # chọn biến phụ thuộc và vẽ biểu đồ phân tán
 if not (file is None):
     bien_phu_thuoc = st.selectbox("Chọn biến phụ thuộc", data.columns)
-    chon_bien_doc_lap = st.multiselect("CHọn biến độc lâp", data.columns)
+    chon_bien_doc_lap = st.multiselect("Chọn biến độc lâp", data.columns)
     for variable in chon_bien_doc_lap:
         st.scatter_chart(data[[bien_phu_thuoc, variable]])
