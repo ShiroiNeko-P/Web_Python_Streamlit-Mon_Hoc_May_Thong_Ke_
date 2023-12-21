@@ -1,56 +1,42 @@
 import streamlit as st
-import numpy as np
-import pandas as pd
 from PIL import Image
+import numpy as np
 import tensorflow as tf
-from keras.preprocessing import image as img_preprocess
 from keras.models import load_model
 
-# Đường dẫn đến file nhãn
-LABELS_PATH = "Data/Chest X-Ray Images (Pneumonia).csv"
-# Đường dẫn đến file mô hình
-MODEL_PATH = "path/to/your/model.h5"
+# Load pre-trained model
+# https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia
+model = load_model('chest_xray_model')
 
-# Load file nhãn
-labels_df = pd.read_csv(LABELS_PATH)
-labels = labels_df["Label"].values.tolist()
+# Define class labels
+class_labels = ['NORMAL', 'PNEUMONIA']
 
-# Load mô hình đã được huấn luyện
-model = load_model(MODEL_PATH)
+# Function to preprocess image
+def preprocess_image(image):
+    img = image.resize((150, 150))
+    img = np.array(img) / 255.0
+    img = np.expand_dims(img, axis=0)
+    return img
 
-# Hàm để xử lý ảnh và dự đoán nhãn
-def process_image(image):
-    # Chuyển đổi ảnh thành mảng numpy
-    img_array = img_preprocess.img_to_array(image)
-    # Chuẩn hóa dữ liệu
-    img_array = img_array / 255.0
-    # Thêm một chiều để phù hợp với đầu vào của mô hình
-    img_array = np.expand_dims(img_array, axis=0)
-    # Dự đoán nhãn
-    prediction = model.predict(img_array)
-    # Lấy nhãn dự đoán cao nhất
-    predicted_label = labels[np.argmax(prediction)]
-    return predicted_label
-
-# Giao diện ứng dụng
+# Streamlit app
 def main():
-    st.title("Ứng dụng nhận diện bệnh nhiễm khuẩn phổi từ ảnh X-Quang")
-    st.write("Upload một tấm ảnh X-Quang để nhận dự đoán")
+    st.title('Pneumonia Detection from X-ray Images')
+    st.text('Upload a chest X-ray image')
 
-    # Upload ảnh từ người dùng
-    uploaded_image = st.file_uploader("Chọn tệp ảnh", type=["jpg", "jpeg", "png"])
+    # Upload image
+    uploaded_image = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
     if uploaded_image is not None:
-        # Đọc ảnh và hiển thị
+        # Preprocess and predict
         image = Image.open(uploaded_image)
-        st.image(image, use_column_width=True)
+        st.image(image, caption='Uploaded Image', use_column_width=True)
+        processed_image = preprocess_image(image)
+        prediction = model.predict(processed_image)
+        predicted_class = class_labels[np.argmax(prediction)]
 
-        # Xử lý ảnh và dự đoán nhãn
-        predicted_label = process_image(image)
+        # Display prediction
+        st.subheader('Prediction:')
+        st.write(f'The image is classified as {predicted_class}')
 
-        # Hiển thị nhãn dự đoán
-        st.write("Nhãn dự đoán:", predicted_label)
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
